@@ -1,0 +1,41 @@
+name: NDIViewerTV
+options:
+  bundleIdPrefix: com.sntr
+  deploymentTarget:
+    tvOS: "16.0"
+
+targets:
+  NDIViewerTV:
+    type: application
+    platform: tvOS
+    sources:
+      - path: Sources/NDIViewerTV
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sntr.ndiviewertv
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/NDIViewerTV/Bridging/NDIViewerTV-Bridging-Header.h
+        HEADER_SEARCH_PATHS: ["$(PROJECT_DIR)/Vendor/NDI/include"]
+        TVOS_DEPLOYMENT_TARGET: "16.0"
+        ENABLE_BITCODE: NO
+
+        # --- Linking against the NDI SDK ---
+        # The current "NDI Advanced SDK" for Apple ships an .xcframework, wired up
+        # via the `dependencies:` block below. If the SDK you download instead
+        # gives you a static lib (older "NDI SDK for Apple", libndi_ios.a) plus
+        # loose headers, delete the `dependencies:` block and uncomment these two
+        # lines instead (adjust the lib name to match what you got):
+        # LIBRARY_SEARCH_PATHS: ["$(PROJECT_DIR)/Vendor/NDI/lib"]
+        # OTHER_LDFLAGS: ["-lndi_ios"]
+    info:
+      path: Generated/Info.plist
+      properties:
+        NSBonjourServices:
+          - _ndi._tcp.
+        NSLocalNetworkUsageDescription: "NDI Viewer discovers and receives NDI video sources on your local network."
+    dependencies:
+      # Expected path once you drop the SDK's xcframework in Vendor/NDI/.
+      # Rename this to match the exact folder name the SDK actually gives you
+      # (NDI has renamed this file across SDK versions).
+      - framework: Vendor/NDI/libndi_advanced.xcframework
+        embed: true
+        codeSignOnCopy: true
