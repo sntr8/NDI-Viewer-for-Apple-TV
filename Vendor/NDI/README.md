@@ -1,16 +1,26 @@
 # NDI SDK goes here
 
-Not included in this repo — it's a proprietary download from NDI, tied to a
-free registration.
+Not in the repo — it's NVIDIA's to license, and this directory is gitignored
+apart from this file.
 
-1. Get the "NDI Advanced SDK" (Apple platforms) from https://ndi.video/for-developers/ndi-sdk/
-2. Find the tvOS `.xcframework` inside the download and copy it here, e.g.:
-   `Vendor/NDI/libndi_advanced.xcframework`
-3. Find the `Processing.NDI.Lib.h` header inside the download and copy the
-   folder containing it here as `Vendor/NDI/include/`.
+Run `Tools/install-ndi-sdk.sh` from the repo root and it will fill this in.
+Afterwards you should have:
 
-If the filenames you get don't match `libndi_advanced.xcframework`, either
-rename what you got to match, or edit the path in `project.yml` under
-`targets.NDIViewerTV.dependencies` to match what NDI actually shipped —
-they've renamed this file across SDK versions, so this couldn't be nailed
-down without downloading it (login-gated).
+```
+Vendor/NDI/include/                    Processing.NDI.*.h
+Vendor/NDI/libndi_tvos.xcframework/    tvos-arm64 + tvos-x86_64-simulator
+Vendor/NDI/licenses/
+```
+
+## What the script is working around
+
+The "NDI SDK for Apple" download ships `lib/tvOS/libndi_tvos.a` — a *fat static
+library*, not an xcframework, with an arm64 (device) slice and an x86_64
+(simulator) slice in the one file. Xcode won't link that directly on Apple
+silicon, so the script splits the slices and repacks them with
+`xcodebuild -create-xcframework`.
+
+Because the only simulator slice is x86_64, **there is no tvOS simulator build
+on an Apple silicon Mac.** Run on real Apple TV hardware.
+
+Verified against **NDI SDK for Apple 6.3.2** (April 2026).

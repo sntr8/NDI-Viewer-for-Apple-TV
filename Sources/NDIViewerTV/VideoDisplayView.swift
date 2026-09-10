@@ -1,44 +1,37 @@
 import SwiftUI
 import AVFoundation
 
-/// A UIView backed by AVSampleBufferDisplayLayer, fed frames pushed in from
-/// NDIReceiver's capture loop.
+/// Hosts the player's display layer and sizes it to the view.
 final class VideoDisplayLayerView: UIView {
-    override static var layerClass: AnyClass { AVSampleBufferDisplayLayer.self }
+    private let player: NDIPlayer
 
-    var displayLayer: AVSampleBufferDisplayLayer {
-        layer as! AVSampleBufferDisplayLayer
-    }
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        displayLayer.videoGravity = .resizeAspect
+    init(player: NDIPlayer) {
+        self.player = player
+        super.init(frame: .zero)
+        backgroundColor = .black
+        layer.addSublayer(player.displayLayer)
     }
 
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        displayLayer.videoGravity = .resizeAspect
+        fatalError("init(coder:) is not used")
     }
 
-    func enqueue(_ sampleBuffer: CMSampleBuffer) {
-        if displayLayer.status == .failed {
-            displayLayer.flush()
-        }
-        displayLayer.enqueue(sampleBuffer)
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // The display layer isn't in the Auto Layout system, so it gets its
+        // frame set by hand rather than through constraints.
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        player.displayLayer.frame = bounds
+        CATransaction.commit()
     }
 }
 
 struct VideoDisplayView: UIViewRepresentable {
-    @ObservedObject var receiver: NDIReceiver
+    let player: NDIPlayer
 
     func makeUIView(context: Context) -> VideoDisplayLayerView {
-        let view = VideoDisplayLayerView()
-        receiver.onVideoSampleBuffer = { [weak view] sampleBuffer in
-            DispatchQueue.main.async {
-                view?.enqueue(sampleBuffer)
-            }
-        }
-        return view
+        VideoDisplayLayerView(player: player)
     }
 
     func updateUIView(_ uiView: VideoDisplayLayerView, context: Context) {}

@@ -2,7 +2,7 @@ name: NDIViewerTV
 options:
   bundleIdPrefix: com.sntr
   deploymentTarget:
-    tvOS: "16.0"
+    tvOS: "17.0"
 
 targets:
   NDIViewerTV:
@@ -15,17 +15,13 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.sntr.ndiviewertv
         SWIFT_OBJC_BRIDGING_HEADER: Sources/NDIViewerTV/Bridging/NDIViewerTV-Bridging-Header.h
         HEADER_SEARCH_PATHS: ["$(PROJECT_DIR)/Vendor/NDI/include"]
-        TVOS_DEPLOYMENT_TARGET: "16.0"
-        ENABLE_BITCODE: NO
-
-        # --- Linking against the NDI SDK ---
-        # The current "NDI Advanced SDK" for Apple ships an .xcframework, wired up
-        # via the `dependencies:` block below. If the SDK you download instead
-        # gives you a static lib (older "NDI SDK for Apple", libndi_ios.a) plus
-        # loose headers, delete the `dependencies:` block and uncomment these two
-        # lines instead (adjust the lib name to match what you got):
-        # LIBRARY_SEARCH_PATHS: ["$(PROJECT_DIR)/Vendor/NDI/lib"]
-        # OTHER_LDFLAGS: ["-lndi_ios"]
+        TVOS_DEPLOYMENT_TARGET: "17.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "App Icon & Top Shelf Image"
+        DEVELOPMENT_TEAM: SUAR78K288
+        CODE_SIGN_STYLE: Automatic
+        # The NDI tvOS library is a C++ static lib, so the C++ runtime has to be
+        # linked explicitly — Swift-only targets don't pull it in on their own.
+        OTHER_LDFLAGS: ["-lc++"]
     info:
       path: Generated/Info.plist
       properties:
@@ -33,9 +29,13 @@ targets:
           - _ndi._tcp.
         NSLocalNetworkUsageDescription: "NDI Viewer discovers and receives NDI video sources on your local network."
     dependencies:
-      # Expected path once you drop the SDK's xcframework in Vendor/NDI/.
-      # Rename this to match the exact folder name the SDK actually gives you
-      # (NDI has renamed this file across SDK versions).
-      - framework: Vendor/NDI/libndi_advanced.xcframework
-        embed: true
-        codeSignOnCopy: true
+      # Built locally from the NDI SDK's lib/tvOS/libndi_tvos.a — see
+      # Vendor/NDI/README.md. It's a *static* library xcframework, so it is
+      # linked, never embedded.
+      - framework: Vendor/NDI/libndi_tvos.xcframework
+        embed: false
+      # libndi_tvos.a calls into both of these directly (H.264 encode/decode
+      # and the vImage colour conversions), and a static lib pulls in no
+      # dependencies of its own.
+      - sdk: VideoToolbox.framework
+      - sdk: Accelerate.framework
