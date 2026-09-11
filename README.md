@@ -37,9 +37,3 @@ With a free Apple ID (no paid Developer Program), the install expires after
 7 days. Reconnect the Apple TV to your Mac and hit Run again in Xcode to
 renew it — no changes needed, just a rebuild. Paying $99/year for the
 Developer Program removes this limit.
-
-## Known limits
-
-- No automatic reconnect if a source goes offline mid-playback.
-- Video is requested from NDI as BGRA/BGRX only; nothing else is valid.
-- Not tested past 1080p.
