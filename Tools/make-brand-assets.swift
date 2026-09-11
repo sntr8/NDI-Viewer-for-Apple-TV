@@ -75,7 +75,16 @@ func render(width: CGFloat, height: CGFloat, logoHeightFraction: CGFloat, fillOn
     CGImageDestinationFinalize(destination)
 }
 
+// This DELETES the whole catalog before regenerating. The committed artwork
+// has been corrected by hand since this script last ran, and hand edits are
+// not recoverable from here, so replacing it takes an explicit --force.
 let fm = FileManager.default
+if fm.fileExists(atPath: catalogURL.path), !CommandLine.arguments.contains("--force") {
+    print("Refusing to run: \(catalogURL.path) already exists.")
+    print("Regenerating deletes it, and the catalog is maintained by hand.")
+    print("Pass --force only if you really mean to replace the artwork.")
+    exit(1)
+}
 try? fm.removeItem(at: catalogURL)
 
 func write(_ json: String, to url: URL) throws {

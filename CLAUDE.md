@@ -114,9 +114,15 @@ because depth only logged every 10s and hid the interruption.
   `.xcodeproj`; change the spec and re-run `xcodegen generate`.
 - `Vendor/NDI/` is gitignored on purpose (license terms). Never commit it, even
   if Xcode drags it in.
-- App icon and top shelf art are generated — edit `Tools/ndiplayer.png` and
-  re-run `swift Tools/make-brand-assets.swift`, don't hand-edit the catalog.
-  tvOS image stacks need at least two layers, hence the split into a solid
-  background and the logo tile.
+- **The asset catalog is hand-maintained — edit it directly.** It was first
+  generated from `Tools/ndiplayer.png` by `Tools/make-brand-assets.swift`, but
+  the good version is hand-corrected art that the script cannot reproduce from
+  a single square source. `make-brand-assets.swift` **deletes the entire
+  catalog** before regenerating, so it now refuses to run without `--force`.
+  Reach for it only to rebuild from nothing, and never chain it behind an
+  unverified edit — hand art here has already been destroyed once that way.
+- tvOS image stacks need at least two layers, the front carrying alpha and the
+  back opaque. Keep all twelve sizes exactly as they are; `actool` rejects
+  mismatches and refuses stacks with fewer than two layers.
 - No CI or tests. Verification is "does it show video and stay in sync on the
   TV", so changes to the receiver or player need a run on hardware.
