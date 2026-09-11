@@ -25,7 +25,7 @@ targets:
     info:
       path: Generated/Info.plist
       properties:
-        CFBundleDisplayName: "NDI Viewer for AppleTV"
+        CFBundleDisplayName: "NDI Viewer"
         NSBonjourServices:
           - _ndi._tcp.
         NSLocalNetworkUsageDescription: "NDI Viewer discovers and receives NDI video sources on your local network."
