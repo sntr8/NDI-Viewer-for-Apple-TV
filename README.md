@@ -41,5 +41,5 @@ Developer Program removes this limit.
 ## Known limits
 
 - No automatic reconnect if a source goes offline mid-playback.
-- Video is received as BGRA only; other formats are reported, not rendered.
+- Video is requested from NDI as BGRA/BGRX only; nothing else is valid.
 - Not tested past 1080p.
