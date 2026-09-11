@@ -29,13 +29,6 @@ Xcode also needs the tvOS platform component installed (Settings > Components)
 — without it `actool` can't compile the app icon and the Apple TV won't show up
 as a run destination.
 
-## The free-account catch
-
-Signing with a free Apple ID (no paid Developer Program) means provisioning
-expires after **7 days**. Reconnect to your Mac and hit Run again roughly once
-a week — nothing to change, just rebuild. The $99/year Developer Program
-removes the limit.
-
 ## How it works
 
 - `Sources/NDIViewerTV/NDIReceiver.swift` — wraps the NDI C SDK. Discovery via
@@ -61,5 +54,3 @@ removes the limit.
 - Video is received as BGRA. Anything else from a source (e.g. a compressed
   format) is reported rather than rendered.
 - Not tested beyond 1080p.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
