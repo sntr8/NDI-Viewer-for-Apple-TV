@@ -108,6 +108,51 @@ it, read those two lines, and fix the mechanism rather than tuning constants.**
 A sender restart also still needs testing — the one attempt was inconclusive
 because depth only logged every 10s and hid the interruption.
 
+### Candidate fix for the servo bug (reviewed off-device 2026-09-11, unverified)
+
+Read through `audioPresentationTime` (NDIReceiver.swift) and `NDIPlayer.trimRate`
+without a Mac or the actual device, so treat this as a starting point for
+whoever can run it and read the logs, not a confirmed fix.
+
+Two mechanisms are both correcting for clock-rate mismatch, and they are
+likely fighting each other:
+
+- `audioPresentationTime`'s `reanchorThreshold` (currently 0.1s) treats any
+  divergence past 100ms between the sample-counted clock and NDI's raw
+  timestamp as a genuine discontinuity, and hard-snaps the anchor to match.
+- `NDIPlayer.trimRate` exists to absorb exactly this kind of steady, small
+  clock-rate error, by nudging playback rate instead of snapping.
+
+A steady ~600 ppm mismatch, which is the leading hypothesis above, crosses
+100ms roughly every 166 seconds purely from clock drift, not from an actual
+break. That lines up with the observed ~160s sawtooth period. Each snap
+dumps the whole accumulated error onto the queue in one step, which is
+plausibly what keeps saturating the depth servo instead of letting it settle.
+
+**First thing to try:** raise `reanchorThreshold` from 0.1 to somewhere in the
+1-2 second range, so it only fires on a genuine break (like the earlier
+observed -3826ms sender clock step) rather than on routine drift. Then let
+`NDIPlayer`'s existing rate servo absorb the residual ppm error the same way
+it already absorbs the sender/renderer clock mismatch.
+
+**How to verify on device:**
+1. Run with the existing `re-anchor by ±Xms` / `stream gap` / depth logging in
+   place.
+2. Confirm the periodic re-anchor log stops appearing during normal playback
+   (only a genuine break should trigger one now).
+3. Watch `NDI-AUDIO depth=...ms rate=...` over several minutes. Depth should
+   settle near the 250ms target instead of sawtoothing, and `rate` should
+   move off its clamp.
+4. If depth still doesn't converge with the snap removed, the ppm estimate
+   feeding the servo (the -21.8 ppm figure used to justify `servoGain` and
+   `maxRateCorrection`) may need re-measuring, since the two error sources
+   were conflated in the earlier measurement.
+
+If this doesn't hold up, check next whether the servo's gain and clamp
+(`servoGain = 2e-3`, `maxRateCorrection = 5e-4`) can even track a full 600 ppm
+error. A 500 ppm clamp is close enough to that figure that it might be the
+actual ceiling, not the re-anchor snap.
+
 ## Conventions
 
 - `project.yml` is the source of truth. Don't hand-edit the generated
